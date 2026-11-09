@@ -29,7 +29,7 @@ Pon Fortnite en **modo ventana sin bordes** (borderless). En pantalla completa e
    ```
    Se abre la captura: arrastra el recuadro sobre el aviso y pulsa ENTER.
 
-   Alternativa con coordenadas. Recorta la plantilla de "abrir cofre"** (abre un cofre con la captura del aviso o del icono que aparece) y luego la de "romper cofre":
+   Alternativa con coordenadas. Recorta la plantilla de "abrir cofre" y luego la de "romper cofre":
    ```bash
    python chest_tracker.py crop templates/region.png X Y W H templates/chest_open.png
    python chest_tracker.py crop templates/region.png X Y W H templates/chest_break.png
@@ -47,6 +47,7 @@ Pon Fortnite en **modo ventana sin bordes** (borderless). En pantalla completa e
    python chest_tracker.py run
    ```
    En Windows basta con doble clic en `run.bat`.
+
    Cada evento imprime algo como `+1 Chest opens -> 1`. Ctrl+C para parar.
 
 5. **Pon el contador en OBS**: añade una fuente *Texto (GDI+)* o *Texto* y marca *Leer desde archivo* apuntando a `chest_tracker/counts/counts.txt`.
