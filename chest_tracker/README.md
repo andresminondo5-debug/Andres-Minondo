@@ -54,13 +54,22 @@ Pon Fortnite en **modo ventana sin bordes** (borderless). En pantalla completa e
 
 Para empezar de cero: `python chest_tracker.py reset`.
 
+## Ver los números en el iPad (app)
+
+Mientras corre `run.bat` en tu PC, la PC también publica una página en tu Wi-Fi:
+
+1. En el iPad, con la misma Wi-Fi, abre Safari y entra a la dirección que sale en la consola, por ejemplo `http://192.168.1.20:8765`.
+2. Toca **Compartir → Agregar a pantalla de inicio**. Queda como una app con el contador en vivo.
+
+Si no carga: en Windows permite Python en el Firewall para redes privadas, o revisa que el puerto `web_port` (8765) esté libre. Pon `"web_port": 0` en `config.json` para apagarla.
+
 ## Archivos
 
 | Archivo | Qué hace |
 |---|---|
 | `chest_tracker.py` | Captura, detección, contadores y comandos (`run`, `snapshot`, `select`, `crop`, `check`, `reset`) |
 | `run.bat`, `setup_templates.bat` | Atajos de Windows para contar y para crear plantillas |
-| `config.json` | Zona de scan, fps, umbral, cooldown, rutas de plantillas |
+| `config.json` | Zona de scan, fps, umbral, cooldown, rutas de plantillas, puerto de la página |
 | `templates/` | Plantillas recortadas (no se suben al repo, ver `.gitignore`) |
 | `counts/` | Contadores en vivo |
 | `tests/test_chest_tracker.py` | Pruebas unitarias de la lógica de detección |

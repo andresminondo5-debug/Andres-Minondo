@@ -8,8 +8,11 @@ and the counters are written to counts/counts.txt for OBS or any text reader.
 
 import argparse
 import json
+import socket
 import sys
+import threading
 import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import cv2
@@ -21,6 +24,8 @@ DEFAULT_CONFIG = {
     # Screen area to scan: [left, top, width, height] in pixels of the monitor.
     "region": [660, 300, 600, 300],
     "fps": 5,
+    # Port for the counter page on your phone/iPad (same Wi-Fi). 0 turns it off.
+    "web_port": 8765,
     # Minimum match score (0..1) to count a hit. Raise it if you get false positives.
     "threshold": 0.85,
     # Seconds a template must stay off screen or wait before it can count again.
@@ -125,6 +130,88 @@ def read_saved_counts(out_dir: Path) -> dict:
     return {}
 
 
+WEB_PAGE = """<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cofres">
+<title>Contador de cofres</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; background: #0d1117; color: #e6edf3;
+    font-family: -apple-system, system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; justify-content: center; align-items: center;
+    gap: 28px; padding: 24px; box-sizing: border-box; }
+  .card { width: min(560px, 100%); background: #161b22; border-radius: 24px; padding: 28px 24px;
+    text-align: center; box-shadow: 0 6px 24px rgba(0,0,0,.35); }
+  .label { font-size: 22px; color: #8b949e; letter-spacing: .02em; }
+  .num { font-size: clamp(96px, 26vw, 180px); font-weight: 800; line-height: 1.05;
+    font-variant-numeric: tabular-nums; }
+  .open .num { color: #3fb950; }
+  .break .num { color: #f0883e; }
+  .status { font-size: 15px; color: #6e7681; }
+</style></head>
+<body>
+  <div class="card open"><div class="label">Cofres abiertos</div><div class="num" id="open">0</div></div>
+  <div class="card break"><div class="label">Cofres rotos</div><div class="num" id="break">0</div></div>
+  <div class="status" id="status">Conectando…</div>
+<script>
+  async function refresh() {
+    try {
+      const r = await fetch('/counts.json', { cache: 'no-store' });
+      const c = await r.json();
+      document.getElementById('open').textContent = c.chest_open ?? 0;
+      document.getElementById('break').textContent = c.chest_break ?? 0;
+      document.getElementById('status').textContent = 'En vivo · ' + new Date().toLocaleTimeString();
+    } catch (e) {
+      document.getElementById('status').textContent = 'Sin conexión con la PC';
+    }
+  }
+  refresh();
+  setInterval(refresh, 1000);
+</script>
+</body></html>
+"""
+
+
+class CountsHandler(BaseHTTPRequestHandler):
+    out_dir: Path = Path(".")
+
+    def do_GET(self):
+        if self.path.split("?")[0] == "/counts.json":
+            body = json.dumps(read_saved_counts(self.out_dir)).encode("utf-8")
+            ctype = "application/json; charset=utf-8"
+        else:
+            body = WEB_PAGE.encode("utf-8")
+            ctype = "text/html; charset=utf-8"
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, format, *args):  # keep the console for tracker events
+        pass
+
+
+def start_web_server(out_dir: Path, port: int) -> ThreadingHTTPServer:
+    handler = type("BoundCountsHandler", (CountsHandler,), {"out_dir": out_dir})
+    server = ThreadingHTTPServer(("0.0.0.0", port), handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server
+
+
+def lan_ip() -> str:
+    """The address other devices on your Wi-Fi can reach this PC at."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("8.8.8.8", 80))  # no packets are sent; this just picks the route
+            return s.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
+
+
 def cmd_run(cfg: dict, base: Path) -> int:
     import mss  # imported here so the other commands work without a display
 
@@ -135,6 +222,15 @@ def cmd_run(cfg: dict, base: Path) -> int:
         counts=read_saved_counts(out_dir),
     )
     write_outputs(out_dir, counter.counts)
+
+    if cfg.get("web_port"):
+        port = int(cfg["web_port"])
+        try:
+            start_web_server(out_dir, port)
+            print(f"Counter page for iPad/iPhone (same Wi-Fi): http://{lan_ip()}:{port}")
+            print("If it does not load, allow Python through Windows Firewall on private networks.")
+        except OSError as exc:
+            print(f"Could not start counter page on port {port}: {exc}", file=sys.stderr)
 
     left, top, width, height = cfg["region"]
     monitor = {"left": left, "top": top, "width": width, "height": height}

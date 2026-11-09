@@ -1,5 +1,10 @@
 {
-  "region": [660, 300, 600, 300],
+  "region": [
+    660,
+    300,
+    600,
+    300
+  ],
   "fps": 5,
   "threshold": 0.85,
   "cooldown_seconds": 3.0,
@@ -7,5 +12,6 @@
     "chest_open": "templates/chest_open.png",
     "chest_break": "templates/chest_break.png"
   },
-  "output_dir": "counts"
+  "output_dir": "counts",
+  "web_port": 8765
 }
