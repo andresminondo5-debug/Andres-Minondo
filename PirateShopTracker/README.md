@@ -66,7 +66,7 @@ Para ejecutar sin instalar: `python run_app.py`.
 - Solo Windows. Las pruebas automáticas corren en cualquier sistema, pero la captura y el instalador son de Windows.
 - La detección depende de la **resolución y escala** del juego. Calibra con la misma configuración que usas.
 - Un aviso muy parecido a otro, o con fondo que cambia, puede dar falsos positivos o fallos. Eso se ajusta con las plantillas.
-- Las atajos globales de teclado no están incluidos; el overlay se controla con el ratón.
+- Los atajos globales de teclado no están incluidos; el overlay se controla con el ratón.
 - No hay icono propio todavía: se puede añadir un `.ico` y ponerlo en `build.bat` con `--icon`.
 
 ## Estructura
