@@ -189,6 +189,24 @@ def cmd_crop(image: str, x: int, y: int, w: int, h: int, out: str) -> int:
     return 0
 
 
+def cmd_select(image: str, out: str) -> int:
+    """Open the screenshot and let you drag a box with the mouse to save it as a template."""
+    img = cv2.imread(image, cv2.IMREAD_COLOR)
+    if img is None:
+        print(f"Cannot read image: {image}", file=sys.stderr)
+        return 1
+    print("Drag a box around the chest notification, then press ENTER (or SPACE). ESC cancels.")
+    x, y, w, h = cv2.selectROI("Select template", img, showCrosshair=True, fromCenter=False)
+    cv2.destroyAllWindows()
+    if w == 0 or h == 0:
+        print("Nothing selected.", file=sys.stderr)
+        return 1
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
+    cv2.imwrite(out, img[y:y + h, x:x + w])
+    print(f"Saved template {Path(out).resolve()} ({w}x{h})")
+    return 0
+
+
 def cmd_check(cfg: dict, base: Path, image: str) -> int:
     """Print match scores for each template against a screenshot, to calibrate the threshold."""
     frame = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
@@ -225,6 +243,9 @@ def build_parser() -> argparse.ArgumentParser:
     for field in ("x", "y", "w", "h"):
         c.add_argument(field, type=int)
     c.add_argument("out")
+    sel = sub.add_parser("select", help="drag a box on a screenshot to save a template")
+    sel.add_argument("image")
+    sel.add_argument("out")
     k = sub.add_parser("check", help="show match scores for an image without counting")
     k.add_argument("image")
     sub.add_parser("reset", help="set all counters back to 0")
@@ -243,6 +264,8 @@ def main(argv=None) -> int:
         return cmd_snapshot(cfg, base, args.out)
     if args.command == "crop":
         return cmd_crop(args.image, args.x, args.y, args.w, args.h, args.out)
+    if args.command == "select":
+        return cmd_select(args.image, args.out)
     if args.command == "check":
         return cmd_check(cfg, base, args.image)
     if args.command == "reset":

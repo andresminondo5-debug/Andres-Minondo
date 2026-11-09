@@ -22,7 +22,14 @@ Pon Fortnite en **modo ventana sin bordes** (borderless). En pantalla completa e
    ```
    Se guarda en `templates/region.png`. Si el aviso de cofre sale en otra parte de la pantalla, cambia `region` en `config.json` (`[left, top, width, height]`) y repite.
 
-2. **Recorta la plantilla de "abrir cofre"** (abre un cofre con la captura del aviso o del icono que aparece) y luego la de "romper cofre":
+2. **Recorta las plantillas** (lo más fácil: `setup_templates.bat` en Windows, o aquí):
+   ```bash
+   python chest_tracker.py select templates/region.png templates/chest_open.png
+   python chest_tracker.py select templates/region.png templates/chest_break.png
+   ```
+   Se abre la captura: arrastra el recuadro sobre el aviso y pulsa ENTER.
+
+   Alternativa con coordenadas. Recorta la plantilla de "abrir cofre"** (abre un cofre con la captura del aviso o del icono que aparece) y luego la de "romper cofre":
    ```bash
    python chest_tracker.py crop templates/region.png X Y W H templates/chest_open.png
    python chest_tracker.py crop templates/region.png X Y W H templates/chest_break.png
@@ -35,10 +42,11 @@ Pon Fortnite en **modo ventana sin bordes** (borderless). En pantalla completa e
    ```
    Verás el `score` de cada plantilla. Un evento debe dar `MATCH` (≥ `threshold`, por defecto 0.85) y lo demás `no match`. Si hay falsos positivos sube `threshold`; si no detecta, bájalo o recorta mejor.
 
-4. **Corre el contador**
+4. **Corre el contador** (grabación continua de la pantalla hasta que cierres la ventana)
    ```bash
    python chest_tracker.py run
    ```
+   En Windows basta con doble clic en `run.bat`.
    Cada evento imprime algo como `+1 Chest opens -> 1`. Ctrl+C para parar.
 
 5. **Pon el contador en OBS**: añade una fuente *Texto (GDI+)* o *Texto* y marca *Leer desde archivo* apuntando a `chest_tracker/counts/counts.txt`.
@@ -49,7 +57,8 @@ Para empezar de cero: `python chest_tracker.py reset`.
 
 | Archivo | Qué hace |
 |---|---|
-| `chest_tracker.py` | Captura, detección, contadores y comandos (`run`, `snapshot`, `crop`, `check`, `reset`) |
+| `chest_tracker.py` | Captura, detección, contadores y comandos (`run`, `snapshot`, `select`, `crop`, `check`, `reset`) |
+| `run.bat`, `setup_templates.bat` | Atajos de Windows para contar y para crear plantillas |
 | `config.json` | Zona de scan, fps, umbral, cooldown, rutas de plantillas |
 | `templates/` | Plantillas recortadas (no se suben al repo, ver `.gitignore`) |
 | `counts/` | Contadores en vivo |
