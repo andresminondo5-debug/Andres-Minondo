@@ -1,0 +1,4 @@
+templates/*.png
+!templates/.gitkeep
+counts/
+__pycache__/
